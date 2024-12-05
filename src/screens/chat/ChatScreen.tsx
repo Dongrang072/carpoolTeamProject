@@ -103,11 +103,8 @@ const ChatScreen = ({navigation, route}: ChatScreenProps) => {
 
       socket.on('driverLeft', data => {
         showAlert('알림', data.message, () => {
-          if (navigation.canGoBack()) {
-            navigation.goBack();
-          } else {
-            navigation.navigate(mapNavigations.MAP_HOME);
-          }
+          disconnect();
+          navigation.navigate(mapNavigations.MAP_HOME, { reset: true });
         });
         const rideRequestId = parseInt(roomId, 10);
         leaveMatchMutation.mutateAsync(rideRequestId);
@@ -115,12 +112,9 @@ const ChatScreen = ({navigation, route}: ChatScreenProps) => {
 
       socket.on('leaveRoom', data => {
         showAlert('알림', data.message, () => {
-          if (data.userName === myName) {
-            if (navigation.canGoBack()) {
-              navigation.goBack();
-            } else {
-              navigation.navigate(mapNavigations.MAP_HOME);
-            }
+          if (data.userName === myName && role === 'passenger') {
+            disconnect();
+            navigation.navigate(mapNavigations.MAP_HOME, { reset: true });
           }
         });
       });
@@ -216,7 +210,7 @@ const ChatScreen = ({navigation, route}: ChatScreenProps) => {
       const rideRequestId = parseInt(roomId, 10);
       leaveMatchMutation.mutateAsync(rideRequestId);
       socket?.emit('leave', `ride_request_${roomId}`);
-      navigation.goBack();
+      navigation.navigate(mapNavigations.MAP_HOME, { reset: true });
     } catch (error) {
       Alert.alert('오류', '매칭 나가기에 실패했습니다.');
     }

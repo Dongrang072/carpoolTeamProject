@@ -6,7 +6,7 @@ import mapHomeScreen from '../../screens/map/MapHomeScreen';
 import ChatScreen from "../../screens/chat/ChatScreen";
 
 export type MapStackParamList = {
-    [mapNavigations.MAP_HOME]: undefined;
+    [mapNavigations.MAP_HOME]: { reset?: boolean };
     [mapNavigations.CHAT]: {
         roomId: string;
         token: string;

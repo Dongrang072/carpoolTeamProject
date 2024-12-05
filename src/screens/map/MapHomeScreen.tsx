@@ -34,7 +34,7 @@ type Navigation = CompositeNavigationProp<
   DrawerNavigationProp<MainDrawerParamList>
 >;
 
-function MapHomeScreen() {
+function MapHomeScreen({ route }: { route: any }) {
   const inset = useSafeAreaInsets();
   const navigation = useNavigation<Navigation>();
   const mapRef = useRef<MapView | null>(null);
@@ -57,7 +57,7 @@ function MapHomeScreen() {
   const [matchingKey, setMatchingKey] = useState<string | null>(null);
   const [rideRequestId, setRideRequestId] = useState<number | null>(null);
   const {role} = useAuth();
-  const {location: driverLocation} = useDriverLocationStore();
+  const {location: driverLocation, setLocation: setDriverLocation} = useDriverLocationStore();
   // @ts-ignore
   const {data: matchingStatus} = useMatchingStatus(matchingKey ?? '', {
     enabled: !!matchingKey,
@@ -202,6 +202,7 @@ function MapHomeScreen() {
     setEndPoint(null);
     setIsDrawerVisible(false);
     setIsMatching(false); // 매칭 상태 초기화
+    setDriverLocation(null); //driver marker 초기화
     Alert.alert('초기화 완료', '출발지와 도착지가 초기화되었습니다.');
   };
 
@@ -261,14 +262,11 @@ function MapHomeScreen() {
     }
   };
 
- const handleLeaveMatch = async (rideRequestId: number) => {
-    try {
-      await leaveMatchMutation.mutateAsync(rideRequestId);
+  useEffect(() => {
+    if (route.params?.reset) {
       resetMatchingState();
-    } catch (error) {
-      Alert.alert('오류', '매칭 나가기에 실패했습니다.');
     }
-  };
+  }, [route.params]);
 
   const navigateToChat = async (rideRequestId: number) => {
     try {

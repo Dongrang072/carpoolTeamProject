@@ -7,7 +7,7 @@ interface DriverLocation {
 
 interface DriverLocationStore {
     location: DriverLocation | null;
-    setLocation: (location: DriverLocation) => void;
+    setLocation: (location: DriverLocation | null) => void;
 }
 
 const useDriverLocationStore = create<DriverLocationStore>((set) => ({
