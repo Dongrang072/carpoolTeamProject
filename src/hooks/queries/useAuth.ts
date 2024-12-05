@@ -109,8 +109,8 @@ function useLogout(mutationOptions?: UseMutationCustomOptions) {
       removeEncryptStorage(storageKeys.ACCESS_TOKEN);
       removeEncryptStorage(storageKeys.REFRESH_TOKEN);
       queryClient.resetQueries({queryKey: [queryKeys.AUTH]});
-      queryClient.removeQueries();
-      queryClient.clear();
+      // queryClient.removeQueries();
+      // queryClient.clear();
     },
     ...mutationOptions,
   });
@@ -133,6 +133,10 @@ function useAuth() {
     if (!getProfileQuery.data) return undefined;
     return (getProfileQuery.data as ResponseProfile)?.role;
   }, [getProfileQuery.data]);
+  const myName = useMemo(() => {
+    if (!getProfileQuery.data) return undefined;
+    return (getProfileQuery.data as ResponseProfile)?.username;
+  }, [getProfileQuery.data]);
 
   return {
     isLoading,
@@ -141,7 +145,8 @@ function useAuth() {
     signupMutation,
     getProfileQuery,
     logoutMutation,
-    role
+    role,
+    myName
   };
 }
 

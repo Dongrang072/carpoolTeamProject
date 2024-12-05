@@ -57,7 +57,7 @@ function MapHomeScreen() {
   const [matchingKey, setMatchingKey] = useState<string | null>(null);
   const [rideRequestId, setRideRequestId] = useState<number | null>(null);
   const {role} = useAuth();
-  const { setLocation } = useDriverLocationStore();
+  const {location: driverLocation} = useDriverLocationStore();
   // @ts-ignore
   const {data: matchingStatus} = useMatchingStatus(matchingKey ?? '', {
     enabled: !!matchingKey,
@@ -247,6 +247,7 @@ function MapHomeScreen() {
     if (!matchingKey) return;
 
     try {
+      console.log("cancel point in handleMatchRequest: ", matchingKey);
       await cancelMatchingMutation.mutateAsync(matchingKey);
       resetMatchingState();
       Alert.alert('매칭 취소', '매칭이 취소되었습니다.');
@@ -260,7 +261,7 @@ function MapHomeScreen() {
     }
   };
 
-  const handleLeaveMatch = async (rideRequestId: number) => {
+ const handleLeaveMatch = async (rideRequestId: number) => {
     try {
       await leaveMatchMutation.mutateAsync(rideRequestId);
       resetMatchingState();
@@ -326,6 +327,11 @@ function MapHomeScreen() {
       Alert.alert('오류', '운행 시작 중 문제가 발생했습니다.');
     }
   };
+  if(role === 'passenger') {
+    console.log(`driverLocation?.latitude: ${driverLocation?.latitude} driverLocation.longitude: ${driverLocation?.longitude}`);
+  } else{
+    console.log("my driver location: ", userLocation);
+  }
 
   return (
     <>
@@ -359,10 +365,14 @@ function MapHomeScreen() {
             strokeWidth={3} // 선 두께
           />
         )}
-        {/*<DriverMarker coordinate={*/}
-        {/*  //latitude , longtitude 추가*/}
-        {/*  //driverLocation: setLocation   webSocket 연결 이후 메세지에 담긴 latitude, longtitude 추출*/}
-        {/*}/>*/}
+        {role === 'passenger' && driverLocation?.latitude && driverLocation?.longitude && (
+            <DriverMarker
+                coordinate={{
+                  latitude: driverLocation.latitude,
+                  longitude: driverLocation.longitude,
+                }}
+            />
+        )}
       </MapView>
       <Pressable
         style={[styles.drawerButton, {top: inset.top || 20}]}
@@ -380,9 +390,6 @@ function MapHomeScreen() {
         >
           <MaterialIcons name="refresh" color={colors.WHITE} size={25} />
         </Pressable>
-        {/* 알람 아이콘 */}
-        <NotificationButton onPress={handleNotificationPress} />
-        {/* 즐겨찾기 버튼 */}
         <FavoriteButton onPress={() => setFavoriteModalVisible(true)} />
       </View>
       {startPoint !== null && endPoint !== null && (
@@ -434,7 +441,6 @@ function MapHomeScreen() {
           onLeaveMatch={() => handleAgreeToStartRide()}
           role={role}
       />
-      {/* 즐겨찾기 모달 */}
       <FavoriteModal
         visible={isFavoriteModalVisible}
         onClose={() => setFavoriteModalVisible(false)}
