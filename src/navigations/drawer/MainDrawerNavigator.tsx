@@ -8,6 +8,7 @@ import {Dimensions} from 'react-native';
 import CustomDrawerContent from './CustomDrawerContent';
 import FeedHomeScreen from '../../screens/feed/FeedHomeScreen';
 import NotificationScreen from '../../screens/NotificationScreen';
+import MyMenuNavigator from "../stack/MyMenuNavigator";
 
 export type MainDrawerParamList = {
   [mainNavigations.HOME]: NavigatorScreenParams<MapStackParamList>;
@@ -86,7 +87,7 @@ function MainDrawerNavigator() {
       />
       <Drawer.Screen
         name={mainNavigations.PROFILE}
-        component={MyMenuHomeScreen}
+        component={MyMenuNavigator}
         options={{
           title: '마이메뉴',
         }}

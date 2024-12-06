@@ -11,6 +11,7 @@ function RootNavigator() {
         return <LoadingScreen />;
     }
     console.log("role: ", role);
+    console.log("isLogin: ", isLogin);
     return (
         <>
             {isLogin ? <MainDrawerNavigator /> : <AuthStackNavigator />}

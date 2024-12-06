@@ -1,10 +1,8 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
-  FlatList,
   TouchableOpacity,
-  Button,
   Modal,
   StyleSheet,
   ScrollView,
@@ -13,157 +11,140 @@ import {
 type FavoriteModalProps = {
   visible: boolean;
   onClose: () => void;
-  favorites: {id: string; startPoint: string; endPoint: string}[];
+  favorites: { id: string; startPoint: string; endPoint: string }[];
   onAddFavorite: (startPoint: string, endPoint: string) => void;
   onSelect: (startPoint: string, endPoint: string) => void;
   onDeleteFavorite: (id: string) => void;
 };
 
 const FavoriteModal: React.FC<FavoriteModalProps> = ({
-  visible,
-  onClose,
-  favorites,
-  onAddFavorite,
-  onSelect,
-  onDeleteFavorite,
-}) => {
-  const [selectedStartPoint, setSelectedStartPoint] = useState<string | null>(
-    null,
-  );
+                                                       visible,
+                                                       onClose,
+                                                       favorites,
+                                                       onAddFavorite,
+                                                       onSelect,
+                                                       onDeleteFavorite,
+                                                     }) => {
+  const [selectedStartPoint, setSelectedStartPoint] = useState<string | null>(null);
   const [selectedEndPoint, setSelectedEndPoint] = useState<string | null>(null);
   const [showStartPoints, setShowStartPoints] = useState(false);
   const [showEndPoints, setShowEndPoints] = useState(false);
 
-  const startPoints = [
-    '명지대 자연캠퍼스',
-    '명지대역',
-    '용인공용버스터미널',
-    '동백역',
-    '기흥역',
-  ];
-  const endPoints = [
-    '명지대 자연캠퍼스',
-    '명지대역',
-    '용인공용버스터미널',
-    '동백역',
-    '기흥역',
-  ];
+  const startPoints = ['명지대 자연캠퍼스', '명지대역', '용인공용버스터미널', '기흥역', '동백역'];
+  const endPoints = ['명지대 자연캠퍼스', '명지대역', '용인공용버스터미널', '기흥역', '동백역'];
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={true}>
-      <View style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          {/* 저장된 즐겨찾기 목록 섹션 (위로 위치 변경) */}
-          <View style={styles.section}>
-            <Text style={styles.subtitle}>저장된 즐겨찾기</Text>
-            {favorites.length > 0 ? (
-              <FlatList
-                data={favorites}
-                keyExtractor={item => item.id}
-                renderItem={({item}) => (
-                  <View style={styles.savedItemContainer}>
-                    <TouchableOpacity
-                      style={styles.savedItem}
-                      onPress={() => {
-                        onSelect(item.startPoint, item.endPoint);
-                        onClose();
-                      }}>
-                      <Text style={styles.savedItemText}>
-                        {item.startPoint} → {item.endPoint}
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.deleteButton}
-                      onPress={() => onDeleteFavorite(item.id)}>
-                      <Text style={styles.deleteButtonText}>삭제</Text>
-                    </TouchableOpacity>
+      <Modal visible={visible} animationType="slide" transparent={true}>
+        <View style={styles.container}>
+          <ScrollView contentContainerStyle={styles.scrollContainer}>
+            {/* 저장된 즐겨찾기 목록 섹션 */}
+            <View style={styles.section}>
+              <Text style={styles.subtitle}>저장된 즐겨찾기</Text>
+              {favorites.length > 0 ? (
+                  <View>
+                    {favorites.map((item) => (
+                        <View style={styles.savedItemContainer} key={item.id}>
+                          <TouchableOpacity
+                              style={styles.savedItem}
+                              onPress={() => {
+                                onSelect(item.startPoint, item.endPoint);
+                                onClose();
+                              }}
+                          >
+                            <Text style={styles.savedItemText}>
+                              {item.startPoint} → {item.endPoint}
+                            </Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                              style={styles.deleteButton}
+                              onPress={() => onDeleteFavorite(item.id)}
+                          >
+                            <Text style={styles.deleteButtonText}>삭제</Text>
+                          </TouchableOpacity>
+                        </View>
+                    ))}
                   </View>
-                )}
-              />
-            ) : (
-              <Text style={styles.noFavorites}>
-                저장된 즐겨찾기가 없습니다.
-              </Text>
-            )}
-          </View>
+              ) : (
+                  <Text style={styles.noFavorites}>저장된 즐겨찾기가 없습니다.</Text>
+              )}
+            </View>
 
-          {/* 새로운 즐겨찾기 추가 섹션 */}
-          <View style={styles.section}>
-            <Text style={styles.subtitle}>출발지 선택</Text>
+            {/* 새로운 즐겨찾기 추가 섹션 */}
+            <View style={styles.section}>
+              <Text style={styles.subtitle}>출발지 선택</Text>
+              <TouchableOpacity
+                  style={[styles.item, selectedStartPoint ? styles.selectedItem : {}]}
+                  onPress={() => setShowStartPoints(!showStartPoints)}
+              >
+                <Text style={styles.itemText}>{selectedStartPoint || '출발지를 선택하세요'}</Text>
+              </TouchableOpacity>
+
+              {showStartPoints && (
+                  <View>
+                    {startPoints.map((item) => (
+                        <TouchableOpacity
+                            key={item}
+                            style={styles.listItem}
+                            onPress={() => {
+                              setSelectedStartPoint(item);
+                              setShowStartPoints(false);
+                            }}
+                        >
+                          <Text style={styles.listItemText}>{item}</Text>
+                        </TouchableOpacity>
+                    ))}
+                  </View>
+              )}
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.subtitle}>목적지 선택</Text>
+              <TouchableOpacity
+                  style={[styles.item, selectedEndPoint ? styles.selectedItem : {}]}
+                  onPress={() => setShowEndPoints(!showEndPoints)}
+              >
+                <Text style={styles.itemText}>{selectedEndPoint || '목적지를 선택하세요'}</Text>
+              </TouchableOpacity>
+
+              {showEndPoints && (
+                  <View>
+                    {endPoints.map((item) => (
+                        <TouchableOpacity
+                            key={item}
+                            style={styles.listItem}
+                            onPress={() => {
+                              setSelectedEndPoint(item);
+                              setShowEndPoints(false);
+                            }}
+                        >
+                          <Text style={styles.listItemText}>{item}</Text>
+                        </TouchableOpacity>
+                    ))}
+                  </View>
+              )}
+            </View>
+
             <TouchableOpacity
-              style={[styles.item, selectedEndPoint ? styles.selectedItem : {}]}
-              onPress={() => setShowStartPoints(!showStartPoints)}>
-              <Text style={styles.itemText}>
-                {selectedStartPoint || '출발지를 선택하세요'}
-              </Text>
+                style={styles.addButton}
+                onPress={() => {
+                  if (selectedStartPoint && selectedEndPoint) {
+                    onAddFavorite(selectedStartPoint, selectedEndPoint);
+                    setSelectedStartPoint(null);
+                    setSelectedEndPoint(null);
+                  } else {
+                    alert('출발지와 목적지를 선택해주세요.');
+                  }
+                }}
+            >
+              <Text style={styles.addButtonText}>즐겨찾기 추가</Text>
             </TouchableOpacity>
+          </ScrollView>
 
-            {showStartPoints && (
-              <FlatList
-                data={startPoints}
-                keyExtractor={item => item}
-                renderItem={({item}) => (
-                  <TouchableOpacity
-                    style={styles.listItem}
-                    onPress={() => {
-                      setSelectedStartPoint(item);
-                      setShowStartPoints(false);
-                    }}>
-                    <Text style={styles.listItemText}>{item}</Text>
-                  </TouchableOpacity>
-                )}
-              />
-            )}
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.subtitle}>목적지 선택</Text>
-            <TouchableOpacity
-              style={[styles.item, selectedEndPoint ? styles.selectedItem : {}]}
-              onPress={() => setShowEndPoints(!showEndPoints)}>
-              <Text style={styles.itemText}>
-                {selectedEndPoint || '목적지를 선택하세요'}
-              </Text>
-            </TouchableOpacity>
-
-            {showEndPoints && (
-              <FlatList
-                data={endPoints}
-                keyExtractor={item => item}
-                renderItem={({item}) => (
-                  <TouchableOpacity
-                    style={styles.listItem}
-                    onPress={() => {
-                      setSelectedEndPoint(item);
-                      setShowEndPoints(false);
-                    }}>
-                    <Text style={styles.listItemText}>{item}</Text>
-                  </TouchableOpacity>
-                )}
-              />
-            )}
-          </View>
-
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => {
-              if (selectedStartPoint && selectedEndPoint) {
-                onAddFavorite(selectedStartPoint, selectedEndPoint);
-                setSelectedStartPoint(null);
-                setSelectedEndPoint(null);
-              } else {
-                alert('출발지와 목적지를 선택해주세요.');
-              }
-            }}>
-            <Text style={styles.addButtonText}>즐겨찾기 추가</Text>
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+            <Text style={styles.closeButtonText}>닫기</Text>
           </TouchableOpacity>
-        </ScrollView>
-
-        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-          <Text style={styles.closeButtonText}>닫기</Text>
-        </TouchableOpacity>
-      </View>
-    </Modal>
+        </View>
+      </Modal>
   );
 };
 

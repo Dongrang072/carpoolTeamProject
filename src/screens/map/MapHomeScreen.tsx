@@ -361,6 +361,8 @@ function MapHomeScreen({route}: {route: any}) {
     setMatchingKey(null);
     setRideRequestId(null);
     setIsRiding(false);
+    setIsReviewModalVisible(false); // 리뷰 모달 닫기
+    setIsPointModalVisible(false); // 포인트 모달 닫기
   };
 
   const getSelectedCoordinates = () => {

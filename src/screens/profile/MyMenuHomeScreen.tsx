@@ -13,60 +13,58 @@ import {
 import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 import useAuth from "../../hooks/queries/useAuth";
-import {ResponseProfile} from "../../api/auth";
+import { ResponseProfile } from "../../api/auth";
 
 function MyMenuHomeScreen() {
     const navigation = useNavigation();
     const { getProfileQuery } = useAuth();
 
     // 프로필 정보를 서버에서 가져온 후 기본값으로 설정
-    const initialProfileData: ResponseProfile  = getProfileQuery.data || {
-        role: "passenger", // 기본 역할 설정
-        username: "", // 사용자 이름 (아이디)
+    const initialProfileData: ResponseProfile = (getProfileQuery.data as ResponseProfile) || {
+        role: "passenger",
+        username: "",
         email: "",
         phoneNumber: "",
         profile: {
-            profilePicture: "", // 프로필 사진 경로
+            profilePicture: "",
+            bio: "",
         },
         vehicleInfo: {
             model: "",
             licensePlate: "",
-            seatingCapacity: "",
+            seatingCapacity: 0,
         },
     };
 
-    const [state, setState] = useState(initialProfileData);
+    const [state, setState] = useState<ResponseProfile>(initialProfileData);
     const [phoneNumber, setPhoneNumber] = useState(initialProfileData.phoneNumber);
     const [model, setModel] = useState(initialProfileData.vehicleInfo?.model || "");
     const [licensePlate, setLicensePlate] = useState(initialProfileData.vehicleInfo?.licensePlate || "");
-    const [seatingCapacity, setSeatingCapacity] = useState(initialProfileData.vehicleInfo?.seatingCapacity || "");
+    const [seatingCapacity, setSeatingCapacity] = useState(initialProfileData.vehicleInfo?.seatingCapacity || 0);
     const [seatingCapacityError, setSeatingCapacityError] = useState("");
     const [inputError, setInputError] = useState("");
 
     useEffect(() => {
-        // 프로필 정보가 변경되면 상태 업데이트
         if (getProfileQuery.data) {
-            const profileData = getProfileQuery.data;
-
-            setState(getProfileQuery.data);
+            const profileData: ResponseProfile = getProfileQuery.data as ResponseProfile;
+            setState(profileData);
             setPhoneNumber(profileData.phoneNumber);
             setModel(profileData.vehicleInfo?.model || "");
             setLicensePlate(profileData.vehicleInfo?.licensePlate || "");
-            setSeatingCapacity(profileData.vehicleInfo?.seatingCapacity || "");
+            setSeatingCapacity(profileData.vehicleInfo?.seatingCapacity || 0);
         }
     }, [getProfileQuery.data]);
 
     if (getProfileQuery.isLoading) {
-        return <Text>Loading...</Text>; // 데이터가 로드 중일 때
+        return <Text>Loading...</Text>;
     }
 
     if (getProfileQuery.isError) {
-        return <Text>Error loading profile data.</Text>; // 에러가 발생한 경우
+        return <Text>Error loading profile data.</Text>;
     }
 
     const handleGoBack = () => {
-        // 입력 필드가 비어 있거나 좌석 수가 1에서 6 사이가 아닌 경우 뒤로가기 막기
-        if (!phoneNumber || (state.role === "driver" && (!model || !licensePlate || !seatingCapacity || parseInt(seatingCapacity) < 1 || parseInt(seatingCapacity) > 6))) {
+        if (!phoneNumber || (state.role === "driver" && (!model || !licensePlate || !seatingCapacity || parseInt(seatingCapacity.toString()) < 1 || parseInt(seatingCapacity.toString()) > 6))) {
             Alert.alert("알림", "모든 필드를 올바르게 입력해주세요.");
             return;
         }
@@ -74,14 +72,12 @@ function MyMenuHomeScreen() {
     };
 
     const handleSaveChanges = () => {
-        // 입력 필드가 비어 있는지 확인
         if (!phoneNumber || (state.role === "driver" && (!model || !licensePlate || !seatingCapacity))) {
             setInputError("모든 필드를 입력해주세요.");
             return;
         }
 
-        // 좌석 수가 1에서 6 사이인지 확인
-        if (state.role === "driver" && (parseInt(seatingCapacity) < 1 || parseInt(seatingCapacity) > 6)) {
+        if (state.role === "driver" && (parseInt(seatingCapacity.toString()) < 1 || parseInt(seatingCapacity.toString()) > 6)) {
             setSeatingCapacityError("좌석 수는 1에서 6 사이여야 합니다.");
             return;
         }
@@ -110,7 +106,7 @@ function MyMenuHomeScreen() {
                         setPhoneNumber(state.phoneNumber);
                         setModel(state.vehicleInfo?.model || "");
                         setLicensePlate(state.vehicleInfo?.licensePlate || "");
-                        setSeatingCapacity(state.vehicleInfo?.seatingCapacity || "");
+                        setSeatingCapacity(state.vehicleInfo?.seatingCapacity || 0);
                         setSeatingCapacityError("");
                         setInputError("");
                     },
@@ -128,7 +124,7 @@ function MyMenuHomeScreen() {
         navigation.navigate("UsageHistory");
     };
 
-    const handleSeatingCapacityChange = (text) => {
+    const handleSeatingCapacityChange = (text: any) => {
         const value = text.replace(/[^0-9]/g, "");
         setSeatingCapacity(value);
 
@@ -162,8 +158,7 @@ function MyMenuHomeScreen() {
                             />
                         )}
                     </View>
-                    {/* 닉네임으로 사용자 아이디(name)를 표시 */}
-                    <Text style={styles.profileName}>{state.name}</Text>
+                    <Text style={styles.profileName}>{state.username}</Text>
                 </View>
 
                 <View style={styles.infoContainer}>
@@ -186,22 +181,22 @@ function MyMenuHomeScreen() {
                                 placeholder="차량 모델 입력"
                                 value={model}
                                 onChangeText={setModel}
-                                editable={state.role === "driver"} // 운전자만 수정 가능
+                                editable={state.role === "driver"}
                             />
                             <TextInput
                                 style={styles.input}
                                 placeholder="차량 번호판 입력"
                                 value={licensePlate}
                                 onChangeText={setLicensePlate}
-                                editable={state.role === "driver"} // 운전자만 수정 가능
+                                editable={state.role === "driver"}
                             />
                             <TextInput
                                 style={styles.input}
                                 placeholder="좌석 수 입력 (1-6)"
-                                value={seatingCapacity}
+                                value={seatingCapacity.toString()}
                                 onChangeText={handleSeatingCapacityChange}
                                 keyboardType="numeric"
-                                editable={state.role === "driver"} // 운전자만 수정 가능
+                                editable={state.role === "driver"}
                             />
                             {seatingCapacityError ? (
                                 <Text style={styles.errorText}>{seatingCapacityError}</Text>
@@ -216,7 +211,6 @@ function MyMenuHomeScreen() {
                 <View style={styles.boxContainer}>
                     <Pressable style={styles.box} onPress={handleViewPointsHistory}>
                         <View style={styles.iconContainer}>
-                            {/* 이미지 추가 */}
                             <Image
                                 source={require('../../asset/point-history-tema.png')}
                                 style={styles.emptyImage}
@@ -232,7 +226,6 @@ function MyMenuHomeScreen() {
 
                     <Pressable style={styles.box} onPress={handleViewUsageHistory}>
                         <View style={styles.iconContainer}>
-                            {/* 이미지 추가 */}
                             <Image
                                 source={require('../../asset/user-history-tema.png')}
                                 style={styles.emptyImage}
@@ -388,7 +381,12 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
     },
     emptyImage: {
-
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: "#ddd",
+        justifyContent: "center",
+        alignItems: "center",
     }
 });
 

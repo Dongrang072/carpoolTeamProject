@@ -129,6 +129,8 @@ function useAuth() {
   const isLoading = getProfileQuery.isLoading;
 
   const isLogin = getProfileQuery.isSuccess;
+  console.log("isLogin in useAuth: ", isLogin);
+  console.log("isLogin in useAuth: ", isLogin);
   const role = useMemo(() => {
     if (!getProfileQuery.data) return undefined;
     return (getProfileQuery.data as ResponseProfile)?.role;
