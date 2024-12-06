@@ -10,6 +10,7 @@ const NotificationButton = () => {
 
   const handlePress = () => {
     // 알림 화면으로 이동
+    // @ts-ignore
     navigation.navigate('Notification', { notifications });  // 알림 화면에 알림 데이터를 전달
   };
 

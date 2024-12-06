@@ -39,34 +39,34 @@ function PointReceivedModal({ visible, onClose, points }: PointReceivedModalProp
   }, [visible]);
 
   return (
-    <Modal
-      animationType="fade"
-      transparent={true}
-      visible={visible}
-      onRequestClose={onClose}
-    >
-      <View style={styles.modalContainer}>
-        <Animated.View style={[styles.modalContent, { transform: [{ scale: scaleValue }] }]}>
-          {/* 고급스러운 아이콘 */}
-          <Icon name="diamond" size={60} color="#5D3FD3" style={styles.icon} />
+      <Modal
+          animationType="fade"
+          transparent={true}
+          visible={visible}
+          onRequestClose={onClose}
+      >
+        <View style={styles.modalContainer}>
+          <Animated.View style={[styles.modalContent, { transform: [{ scale: scaleValue }] }]}>
+            {/* 고급스러운 아이콘 */}
+            <Icon name="diamond" size={60} color="#5D3FD3" style={styles.icon} />
 
-          {/* 받는 포인트 안내 */}
-          <Text style={styles.title}>축하합니다!</Text>
-          <Text style={styles.subtitle}>탑승자로부터 포인트를 받았습니다!</Text>
+            {/* 받는 포인트 안내 */}
+            <Text style={styles.title}>축하합니다!</Text>
+            <Text style={styles.subtitle}>탑승자로부터 포인트를 받았습니다!</Text>
 
-          {/* 포인트 강조 표시 */}
-          <View style={styles.pointsContainer}>
-            <Text style={styles.points}>{points}</Text>
-            <Text style={styles.pointsLabel}>포인트</Text>
-          </View>
+            {/* 포인트 강조 표시 */}
+            <View style={styles.pointsContainer}>
+              <Text style={styles.points}>{points}</Text>
+              <Text style={styles.pointsLabel}>포인트</Text>
+            </View>
 
-          {/* 확인 버튼 */}
-          <Pressable style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>확인</Text>
-          </Pressable>
-        </Animated.View>
-      </View>
-    </Modal>
+            {/* 확인 버튼 */}
+            <Pressable style={styles.closeButton} onPress={onClose}>
+              <Text style={styles.closeButtonText}>확인</Text>
+            </Pressable>
+          </Animated.View>
+        </View>
+      </Modal>
   );
 }
 

@@ -10,7 +10,7 @@ import {
 import {colors} from '../constants';
 import type {StationLocation} from '../constants/stationlocations';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import PricingHelpModal from '../components/PricingHelpModal'; // 도움말 기능 추가
+import PricingHelpModal from '../components/PricingHelpModal';
 
 interface BottomDrawerProps {
   isVisible: boolean;
@@ -23,11 +23,13 @@ interface BottomDrawerProps {
   onMatchStart: () => void;
   isMatching: boolean; // 매칭 상태 prop 추가
   isMatched: boolean;
+  isRiding: boolean;
   onNavigateToChat: () => void;
-  onLeaveMatch: () => void;
+  onAgreeMatch: () => void;
+  onCompleteMatch: () => void;
   role: 'driver' | 'passenger' | undefined;
 }
-
+//isRiding 추가
 function BottomDrawer({
                         isVisible,
                         startPoint,
@@ -39,8 +41,10 @@ function BottomDrawer({
                         onMatchStart,
                         isMatching,
                         isMatched,
+                        isRiding,
                         onNavigateToChat,
-                        onLeaveMatch,
+                        onAgreeMatch,
+                        onCompleteMatch,
                         role,
                       }: BottomDrawerProps) {
   if (!isVisible) return null;
@@ -120,7 +124,30 @@ function BottomDrawer({
                 </Pressable>
               </View>
 
-              {isMatched ? (
+              {isRiding ? (
+                  <View style={styles.newActionButtons}>
+                    <Pressable style={styles.chatButton} onPress={onNavigateToChat}>
+                      <Text style={styles.chatButtonText}>채팅창으로 돌아가기</Text>
+                    </Pressable>
+                    <Pressable
+                        style={[
+                          styles.agreeButton,
+                          role === 'passenger' && styles.disabledButton
+                        ]}
+                        onPress={onCompleteMatch}
+                        disabled={role === 'passenger'}
+                    >
+                      <Text
+                          style={[
+                            styles.agreeButtonText,
+                            role === 'passenger' && styles.disabledButtonText
+                          ]}
+                      >
+                        {role === 'driver' ? '운행 완료' : '운행 중'}
+                      </Text>
+                    </Pressable>
+                  </View>
+              ):isMatched ? (
                   <View style={styles.newActionButtons}>
                     <Pressable
                         style={styles.chatButton}
@@ -129,7 +156,7 @@ function BottomDrawer({
                     </Pressable>
                     <Pressable
                         style={styles.agreeButton}
-                        onPress={onLeaveMatch}>
+                        onPress={onAgreeMatch}>
                       <Text style={styles.agreeButtonText}>
                         {role === 'driver' ? '운행 시작' : '탑승 완료'}
                       </Text>
@@ -314,6 +341,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  disabledButton: {
+    backgroundColor: colors.GRAY_300,
+    opacity: 0.7,
+  },
+  disabledButtonText: {
+    color: colors.WHITE,
   },
 });
 

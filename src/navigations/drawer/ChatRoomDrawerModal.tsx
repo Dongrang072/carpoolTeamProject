@@ -1,7 +1,5 @@
 import React, {useEffect} from 'react';
 import { View, Text, Modal,TouchableOpacity, StyleSheet, Animated, Dimensions, FlatList,Alert } from 'react-native';
-import { DrawerContentScrollView, DrawerContentComponentProps } from '@react-navigation/drawer';
-import useSocketStore from '../../store/SocketStore';
 import { colors} from '../../constants';
 import {ChatUser} from '../../store/SocketStore';
 import Icon from "react-native-vector-icons/Ionicons";

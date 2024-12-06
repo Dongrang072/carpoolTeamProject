@@ -13,13 +13,14 @@ import {
 import Icon from "react-native-vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 import useAuth from "../../hooks/queries/useAuth";
+import {ResponseProfile} from "../../api/auth";
 
 function MyMenuHomeScreen() {
     const navigation = useNavigation();
     const { getProfileQuery } = useAuth();
 
     // 프로필 정보를 서버에서 가져온 후 기본값으로 설정
-    const initialProfileData = getProfileQuery.data || {
+    const initialProfileData: ResponseProfile  = getProfileQuery.data || {
         role: "passenger", // 기본 역할 설정
         username: "", // 사용자 이름 (아이디)
         email: "",
@@ -100,22 +101,22 @@ function MyMenuHomeScreen() {
 
     const handleCancelChanges = () => {
         Alert.alert(
-          "알림",
-          "변경 내용을 취소하시겠습니까?",
-          [
-              {
-                  text: "확인",
-                  onPress: () => {
-                      setPhoneNumber(state.phoneNumber);
-                      setModel(state.vehicleInfo?.model || "");
-                      setLicensePlate(state.vehicleInfo?.licensePlate || "");
-                      setSeatingCapacity(state.vehicleInfo?.seatingCapacity || "");
-                      setSeatingCapacityError("");
-                      setInputError("");
-                  },
-              },
-              { text: "취소", style: "cancel" },
-          ]
+            "알림",
+            "변경 내용을 취소하시겠습니까?",
+            [
+                {
+                    text: "확인",
+                    onPress: () => {
+                        setPhoneNumber(state.phoneNumber);
+                        setModel(state.vehicleInfo?.model || "");
+                        setLicensePlate(state.vehicleInfo?.licensePlate || "");
+                        setSeatingCapacity(state.vehicleInfo?.seatingCapacity || "");
+                        setSeatingCapacityError("");
+                        setInputError("");
+                    },
+                },
+                { text: "취소", style: "cancel" },
+            ]
         );
     };
 
@@ -139,123 +140,123 @@ function MyMenuHomeScreen() {
     };
 
     return (
-      <SafeAreaView style={styles.container}>
-          <Pressable style={styles.backButton} onPress={handleGoBack}>
-              <Icon name="arrow-back" size={24} color="#000" />
-          </Pressable>
+        <SafeAreaView style={styles.container}>
+            <Pressable style={styles.backButton} onPress={handleGoBack}>
+                <Icon name="arrow-back" size={24} color="#000" />
+            </Pressable>
 
-          <ScrollView contentContainerStyle={styles.scrollContent}>
-              <View style={styles.profileHeader}>
-                  <View style={styles.profileImageContainer}>
-                      {state.profile?.profilePicture ? (
-                        <Image
-                          source={{ uri: state.profile.profilePicture }}
-                          style={styles.profileImage}
-                          resizeMode="cover"
-                        />
-                      ) : (
-                        <Image
-                          source={require('../../asset/user-profile-default.png')}
-                          style={styles.profileImage}
-                          resizeMode="cover"
-                        />
-                      )}
-                  </View>
-                  {/* 닉네임으로 사용자 아이디(name)를 표시 */}
-                  <Text style={styles.profileName}>{state.name}</Text>
-              </View>
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+                <View style={styles.profileHeader}>
+                    <View style={styles.profileImageContainer}>
+                        {state.profile?.profilePicture ? (
+                            <Image
+                                source={{ uri: state.profile.profilePicture }}
+                                style={styles.profileImage}
+                                resizeMode="cover"
+                            />
+                        ) : (
+                            <Image
+                                source={require('../../asset/user-profile-default.png')}
+                                style={styles.profileImage}
+                                resizeMode="cover"
+                            />
+                        )}
+                    </View>
+                    {/* 닉네임으로 사용자 아이디(name)를 표시 */}
+                    <Text style={styles.profileName}>{state.name}</Text>
+                </View>
 
-              <View style={styles.infoContainer}>
-                  <Text style={styles.infoText}>Role: {state.role}</Text>
-                  <Text style={styles.infoText}>Email: {state.email}</Text>
-              </View>
+                <View style={styles.infoContainer}>
+                    <Text style={styles.infoText}>Role: {state.role}</Text>
+                    <Text style={styles.infoText}>Email: {state.email}</Text>
+                </View>
 
-              <View style={styles.editableInfoContainer}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="휴대폰 번호 입력"
-                    value={phoneNumber}
-                    onChangeText={(text) => setPhoneNumber(text.replace(/[^0-9]/g, ""))}
-                    keyboardType="numeric"
-                  />
-                  {state.role === "driver" && (
-                    <>
-                        <TextInput
-                          style={styles.input}
-                          placeholder="차량 모델 입력"
-                          value={model}
-                          onChangeText={setModel}
-                          editable={state.role === "driver"} // 운전자만 수정 가능
-                        />
-                        <TextInput
-                          style={styles.input}
-                          placeholder="차량 번호판 입력"
-                          value={licensePlate}
-                          onChangeText={setLicensePlate}
-                          editable={state.role === "driver"} // 운전자만 수정 가능
-                        />
-                        <TextInput
-                          style={styles.input}
-                          placeholder="좌석 수 입력 (1-6)"
-                          value={seatingCapacity}
-                          onChangeText={handleSeatingCapacityChange}
-                          keyboardType="numeric"
-                          editable={state.role === "driver"} // 운전자만 수정 가능
-                        />
-                        {seatingCapacityError ? (
-                          <Text style={styles.errorText}>{seatingCapacityError}</Text>
-                        ) : null}
-                    </>
-                  )}
-                  {inputError ? (
-                    <Text style={styles.errorText}>{inputError}</Text>
-                  ) : null}
-              </View>
+                <View style={styles.editableInfoContainer}>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="휴대폰 번호 입력"
+                        value={phoneNumber}
+                        onChangeText={(text) => setPhoneNumber(text.replace(/[^0-9]/g, ""))}
+                        keyboardType="numeric"
+                    />
+                    {state.role === "driver" && (
+                        <>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="차량 모델 입력"
+                                value={model}
+                                onChangeText={setModel}
+                                editable={state.role === "driver"} // 운전자만 수정 가능
+                            />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="차량 번호판 입력"
+                                value={licensePlate}
+                                onChangeText={setLicensePlate}
+                                editable={state.role === "driver"} // 운전자만 수정 가능
+                            />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="좌석 수 입력 (1-6)"
+                                value={seatingCapacity}
+                                onChangeText={handleSeatingCapacityChange}
+                                keyboardType="numeric"
+                                editable={state.role === "driver"} // 운전자만 수정 가능
+                            />
+                            {seatingCapacityError ? (
+                                <Text style={styles.errorText}>{seatingCapacityError}</Text>
+                            ) : null}
+                        </>
+                    )}
+                    {inputError ? (
+                        <Text style={styles.errorText}>{inputError}</Text>
+                    ) : null}
+                </View>
 
-              <View style={styles.boxContainer}>
-                  <Pressable style={styles.box} onPress={handleViewPointsHistory}>
-                      <View style={styles.iconContainer}>
-                          {/* 이미지 추가 */}
-                          <Image
-                            source={require('../../asset/point-history-tema.png')}
-                            style={styles.emptyImage}
-                            resizeMode="contain"
-                          />
-                      </View>
-                      <View style={styles.textContainer}>
-                          <Text style={styles.title}>포인트 내역</Text>
-                          <Text style={styles.subtitle}>포인트 내역 바로가기</Text>
-                      </View>
-                      <Icon name="chevron-forward" size={24} color="#000" />
-                  </Pressable>
+                <View style={styles.boxContainer}>
+                    <Pressable style={styles.box} onPress={handleViewPointsHistory}>
+                        <View style={styles.iconContainer}>
+                            {/* 이미지 추가 */}
+                            <Image
+                                source={require('../../asset/point-history-tema.png')}
+                                style={styles.emptyImage}
+                                resizeMode="contain"
+                            />
+                        </View>
+                        <View style={styles.textContainer}>
+                            <Text style={styles.title}>포인트 내역</Text>
+                            <Text style={styles.subtitle}>포인트 내역 바로가기</Text>
+                        </View>
+                        <Icon name="chevron-forward" size={24} color="#000" />
+                    </Pressable>
 
-                  <Pressable style={styles.box} onPress={handleViewUsageHistory}>
-                      <View style={styles.iconContainer}>
-                          {/* 이미지 추가 */}
-                          <Image
-                            source={require('../../asset/user-history-tema.png')}
-                            style={styles.emptyImage}
-                            resizeMode="contain"
-                          />
-                      </View>
-                      <View style={styles.textContainer}>
-                          <Text style={styles.title}>이용 내역</Text>
-                          <Text style={styles.subtitle}>이용 내역 바로가기</Text>
-                      </View>
-                      <Icon name="chevron-forward" size={24} color="#000" />
-                  </Pressable>
-              </View>
+                    <Pressable style={styles.box} onPress={handleViewUsageHistory}>
+                        <View style={styles.iconContainer}>
+                            {/* 이미지 추가 */}
+                            <Image
+                                source={require('../../asset/user-history-tema.png')}
+                                style={styles.emptyImage}
+                                resizeMode="contain"
+                            />
+                        </View>
+                        <View style={styles.textContainer}>
+                            <Text style={styles.title}>이용 내역</Text>
+                            <Text style={styles.subtitle}>이용 내역 바로가기</Text>
+                        </View>
+                        <Icon name="chevron-forward" size={24} color="#000" />
+                    </Pressable>
+                </View>
 
-              <View style={styles.buttonContainer}>
-                  <Pressable style={styles.saveButton} onPress={handleSaveChanges}>
-                      <Text style={styles.buttonText}>변경</Text>
-                  </Pressable>
-                  <Pressable style={styles.cancelButton} onPress={handleCancelChanges}>
-                      <Text style={styles.buttonText}>취소</Text>
-                  </Pressable>
-              </View>
-          </ScrollView>
-      </SafeAreaView>
+                <View style={styles.buttonContainer}>
+                    <Pressable style={styles.saveButton} onPress={handleSaveChanges}>
+                        <Text style={styles.buttonText}>변경</Text>
+                    </Pressable>
+                    <Pressable style={styles.cancelButton} onPress={handleCancelChanges}>
+                        <Text style={styles.buttonText}>취소</Text>
+                    </Pressable>
+                </View>
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 
@@ -386,6 +387,9 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "bold",
     },
+    emptyImage: {
+
+    }
 });
 
 export default MyMenuHomeScreen;

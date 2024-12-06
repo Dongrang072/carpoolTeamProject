@@ -153,8 +153,18 @@ const verifyCode = async (email: string, code: string): Promise<boolean> => {
     }
 };
 
+const getDriverReviews = async (driverId: number): Promise<any> => {
+    try {
+        const { data } = await axiosInstance.get(`/reviews/driver/${driverId}`);
+        console.log("Driver reviews data: ", data);
+        return data;
+    } catch (error) {
+        console.error("Error fetching driver reviews:", error);
+        throw new Error('Error fetching driver reviews');
+    }
+};
 
-export {postSignUp, postLogIn, getProfile, getAccessToken, sendVerificationCode, verifyCode, logout}; // logout은 서버에서 구현 안할것 같음
+export {postSignUp, postLogIn, getProfile, getAccessToken, sendVerificationCode, verifyCode, logout, getDriverReviews}; // logout은 서버에서 구현 안할것 같음
 export type {
     RequestUser,
     RequestSignUpUser,

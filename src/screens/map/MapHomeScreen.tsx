@@ -24,17 +24,20 @@ import FavoriteModal from '../../components/FavoriteModal'; // 즐겨찾기 모�
 import NotificationButton from '../../components/NotificationButton';
 import useAuth from '../../hooks/queries/useAuth';
 import {getEncryptStorage} from '../../utils';
-import DriverMarker from "../../components/DriverMarker";
-import driverLocation from "../../store/DriverLocation";
-import DriverLocation from "../../store/DriverLocation";
-import useDriverLocationStore from "../../store/DriverLocation";
+import DriverMarker from '../../components/DriverMarker';
+import useDriverLocationStore from '../../store/DriverLocation';
+import {completeRide} from '../../api/matching';
+import ReviewModal from "../../components/modal/ReviewModal";
+import PointReceivedModal from "../../components/modal/PointReceivedModal";
+import {pricingData} from "../../components/PricingHelpModal";
+import StationLocations from "../../constants/stationlocations";
 
 type Navigation = CompositeNavigationProp<
   StackNavigationProp<MapStackParamList>,
   DrawerNavigationProp<MainDrawerParamList>
 >;
 
-function MapHomeScreen({ route }: { route: any }) {
+function MapHomeScreen({route}: {route: any}) {
   const inset = useSafeAreaInsets();
   const navigation = useNavigation<Navigation>();
   const mapRef = useRef<MapView | null>(null);
@@ -46,18 +49,22 @@ function MapHomeScreen({ route }: { route: any }) {
   const [isDrawerVisible, setIsDrawerVisible] = useState(false); // 바텀 드로워 표시 상태
   const [isMatching, setIsMatching] = useState(false);
   const [isRiding, setIsRiding] = useState(false);
+  const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
+  const [isPointModalVisible, setIsPointModalVisible] = useState(false);
+  const [receivedPoints, setReceivedPoints] = useState(0); // 받은 포인트 저장
 
   const {
     requestMatchingMutation,
     cancelMatchingMutation,
-    leaveMatchMutation,
     agreeToStartRideMutation,
+    completeRideMutation,
   } = useMatching();
 
   const [matchingKey, setMatchingKey] = useState<string | null>(null);
   const [rideRequestId, setRideRequestId] = useState<number | null>(null);
   const {role} = useAuth();
-  const {location: driverLocation, setLocation: setDriverLocation} = useDriverLocationStore();
+  const {location: driverLocation, setLocation: setDriverLocation} =
+    useDriverLocationStore();
   // @ts-ignore
   const {data: matchingStatus} = useMatchingStatus(matchingKey ?? '', {
     enabled: !!matchingKey,
@@ -170,6 +177,37 @@ function MapHomeScreen({ route }: { route: any }) {
     setFavoriteModalVisible(true);
   };
 
+  const calculatePoints = (startStation: number | null, endStation: number | null): number => {
+    if (startPoint === null || endPoint === null) return 0;
+
+    const startName = StationLocations.find(
+        station => station.id === startPoint
+    )?.stationName;
+
+    const endName = StationLocations.find(
+        station => station.id === endPoint
+    )?.stationName;
+
+    if (!startName || !endName) {
+      console.warn(`Cannot find station names for IDs: ${startPoint}, ${endPoint}`);
+      return 0;
+    }
+    const route = pricingData.find(
+        route =>
+            (route.departure === startName && route.destination === endName) ||
+            (route.departure === endName && route.destination === startName)
+    );
+
+    if (!route) {
+      console.warn(`No pricing found for route: ${startName} -> ${endName}`);
+      return 0;
+    }
+    // 기본 요금을 포인트로 사용 (price[0]이 기본 요금)
+    // 포인트는 요금의 일정 비율로 계산 (예: 10%)
+    const pointRate = 0.1;
+    return Math.floor(route.price[0] * pointRate);
+  };
+
   useEffect(() => {
     if (matchingStatus?.status) {
       const {status, rideRequestId: newRideRequestId} = matchingStatus.status;
@@ -190,8 +228,35 @@ function MapHomeScreen({ route }: { route: any }) {
           ],
         );
       }
+      if (status === 2) {
+        if (role === 'passenger') {
+          // 탑승자: 리뷰 모달 표시
+          setIsReviewModalVisible(true);
+          setIsRiding(false);
+          handleReset();
+        } else if (role === 'driver') {
+          // 운전자: 포인트 모달 표시 (포인트는 API 응답에서 받아와야 함)
+          const calculatedPoints = calculatePoints(startPoint, endPoint);
+          setReceivedPoints(calculatedPoints);
+          setIsPointModalVisible(true);
+          setIsRiding(false);
+          handleReset();
+        }
+      }
     }
   }, [matchingStatus]);
+
+  const handleReviewSubmitted = async () => {
+    setIsReviewModalVisible(false);
+    resetMatchingState();
+    Alert.alert('리뷰 작성 완료', '리뷰가 성공적으로 제출되었습니다.');
+  };
+
+  const handlePointModalClose = () => {
+    setIsPointModalVisible(false);
+    resetMatchingState();
+  };
+
 
   const handleCloseDrawer = () => {
     setIsDrawerVisible(false); // 드로워 닫기
@@ -207,9 +272,14 @@ function MapHomeScreen({ route }: { route: any }) {
   };
 
   const handleMatchRequest = async () => {
-    console.log("start point in handleMatchRequest: ", startPoint);
-    console.log("end point in handleMatchRequest: ", endPoint);
-    if (startPoint === null || startPoint === undefined || endPoint === null || endPoint === undefined) {
+    console.log('start point in handleMatchRequest: ', startPoint);
+    console.log('end point in handleMatchRequest: ', endPoint);
+    if (
+      startPoint === null ||
+      startPoint === undefined ||
+      endPoint === null ||
+      endPoint === undefined
+    ) {
       Alert.alert('오류', '출발지와 도착지를 모두 설정해주세요.');
       return;
     }
@@ -248,7 +318,7 @@ function MapHomeScreen({ route }: { route: any }) {
     if (!matchingKey) return;
 
     try {
-      console.log("cancel point in handleMatchRequest: ", matchingKey);
+      console.log('cancel point in handleMatchRequest: ', matchingKey);
       await cancelMatchingMutation.mutateAsync(matchingKey);
       resetMatchingState();
       Alert.alert('매칭 취소', '매칭이 취소되었습니다.');
@@ -278,7 +348,7 @@ function MapHomeScreen({ route }: { route: any }) {
         isDriver: role === 'driver',
       });
     } catch (error) {
-      console.log("채팅방 입장 오류: ", error);
+      console.log('채팅방 입장 오류: ', error);
       Alert.alert('오류', '채팅방 입장에 실패했습니다.');
     }
   };
@@ -290,6 +360,7 @@ function MapHomeScreen({ route }: { route: any }) {
     setIsMatching(false);
     setMatchingKey(null);
     setRideRequestId(null);
+    setIsRiding(false);
   };
 
   const getSelectedCoordinates = () => {
@@ -320,16 +391,36 @@ function MapHomeScreen({ route }: { route: any }) {
   const handleAgreeToStartRide = async () => {
     try {
       await agreeToStartRideMutation.mutateAsync(rideRequestId!);
-      Alert.alert('운행 시작', '운행이 시작되었습니다.');
+      setIsRiding(true);
+      if(role === 'driver'){
+        Alert.alert('운행 시작', '운행이 시작되었습니다.');
+      } else if(role === 'passenger'){
+        Alert.alert('탑승 완료', '운전자의 차량에 탑승했습니다.');
+      }
     } catch (error) {
       Alert.alert('오류', '운행 시작 중 문제가 발생했습니다.');
     }
   };
-  if(role === 'passenger') {
-    console.log(`driverLocation?.latitude: ${driverLocation?.latitude} driverLocation.longitude: ${driverLocation?.longitude}`);
-  } else{
-    console.log("my driver location: ", userLocation);
+  if (role === 'passenger') {
+    console.log(
+      `driverLocation?.latitude: ${driverLocation?.latitude} driverLocation.longitude: ${driverLocation?.longitude}`,
+    );
+  } else {
+    console.log('my driver location: ', userLocation);
   }
+
+  const handleCompleteRide = async () => {
+    try {
+      await completeRideMutation.mutateAsync(rideRequestId!);
+      if (role === 'driver') {
+        // 운전자의 경우 서버에서 완료 처리만 하고
+        // matchingStatus 변경을 기다림 (위 useEffect에서 처리)
+        Alert.alert('운행 완료', '운행이 완료되었습니다.');
+      }
+    } catch (error) {
+      Alert.alert('오류', '운행 완료 중 문제가 발생했습니다.');
+    }
+  };
 
   return (
     <>
@@ -363,14 +454,16 @@ function MapHomeScreen({ route }: { route: any }) {
             strokeWidth={3} // 선 두께
           />
         )}
-        {role === 'passenger' && driverLocation?.latitude && driverLocation?.longitude && (
+        {role === 'passenger' &&
+          driverLocation?.latitude &&
+          driverLocation?.longitude && (
             <DriverMarker
-                coordinate={{
-                  latitude: driverLocation.latitude,
-                  longitude: driverLocation.longitude,
-                }}
+              coordinate={{
+                latitude: driverLocation.latitude,
+                longitude: driverLocation.longitude,
+              }}
             />
-        )}
+          )}
       </MapView>
       <Pressable
         style={[styles.drawerButton, {top: inset.top || 20}]}
@@ -382,9 +475,9 @@ function MapHomeScreen({ route }: { route: any }) {
           <MaterialIcons name="my-location" color={colors.WHITE} size={25} />
         </Pressable>
         <Pressable
-          style={[styles.resetButton, isMatching && styles.disabledButton]}
+          style={[styles.resetButton, (isMatching || isRiding) && styles.disabledButton]}
           onPress={handleReset}
-          disabled={isMatching} // 매칭 중일 때 비활성화
+          disabled={isMatching || isRiding} // 매칭 중일 때 비활성화
         >
           <MaterialIcons name="refresh" color={colors.WHITE} size={25} />
         </Pressable>
@@ -398,7 +491,7 @@ function MapHomeScreen({ route }: { route: any }) {
           ]}
           onPress={() => setIsDrawerVisible(true)}>
           <Text style={styles.matchingStartText}>
-            {isMatching ? '매칭 중입니다' : '매칭 시작하기'}
+            {isRiding ? '운행중입니다' : isMatching ? '매칭 중입니다' : '매칭 시작하기'}
           </Text>
           <MaterialIcons
             name={isMatching ? 'hourglass-empty' : 'send'}
@@ -425,19 +518,23 @@ function MapHomeScreen({ route }: { route: any }) {
       />
 
       <BottomDrawer
-          isVisible={isDrawerVisible}
-          startPoint={startPoint}
-          endPoint={endPoint}
-          stations={stationLocations}
-          onSelectStation={handleSelectStation}
-          onCancel={isMatching ? handleCancel : () => setIsDrawerVisible(false)}
-          closeDrawer={() => handleCloseDrawer()}
-          onMatchStart={handleMatchRequest}
-          isMatching={isMatching}
-          isMatched={rideRequestId != null && matchingStatus?.status?.status === 1}
-          onNavigateToChat={() => navigateToChat(rideRequestId!)}
-          onLeaveMatch={() => handleAgreeToStartRide()}
-          role={role}
+        isVisible={isDrawerVisible}
+        startPoint={startPoint}
+        endPoint={endPoint}
+        stations={stationLocations}
+        onSelectStation={handleSelectStation}
+        onCancel={isMatching ? handleCancel : () => setIsDrawerVisible(false)}
+        closeDrawer={() => handleCloseDrawer()}
+        onMatchStart={handleMatchRequest}
+        isMatching={isMatching}
+        isMatched={
+          rideRequestId != null && matchingStatus?.status?.status === 1
+        }
+        isRiding={isRiding}
+        onNavigateToChat={() => navigateToChat(rideRequestId!)}
+        onAgreeMatch={() => handleAgreeToStartRide()}
+        role={role}
+        onCompleteMatch={() => handleCompleteRide()}
       />
       <FavoriteModal
         visible={isFavoriteModalVisible}
@@ -446,6 +543,17 @@ function MapHomeScreen({ route }: { route: any }) {
         onAddFavorite={handleAddFavorite}
         favorites={favorites}
         onDeleteFavorite={handleDeleteFavorite} // 삭제 함수 전달
+      />
+      <ReviewModal
+          visible={isReviewModalVisible}
+          onClose={() => setIsReviewModalVisible(false)}
+          matchId={rideRequestId!}
+          onReviewSubmitted={handleReviewSubmitted}
+      />
+      <PointReceivedModal
+          visible={isPointModalVisible}
+          onClose={handlePointModalClose}
+          points={receivedPoints}
       />
     </>
   );

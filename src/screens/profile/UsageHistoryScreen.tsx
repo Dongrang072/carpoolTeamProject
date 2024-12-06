@@ -8,36 +8,36 @@ const UsageHistoryScreen = () => {
   const usageHistory: string | ArrayLike<any> | null | undefined = []; // 현재 이용 내역이 없으면 빈 배열로 설정
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size={24} color="#000" />
-        </Pressable>
-        <Text style={styles.headerTitle}>이용 내역</Text>
-      </View>
-
-      {usageHistory.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          {/* 이미지 추가 */}
-          <Image
-            source={require('../../asset/user-history.png')}
-            style={styles.emptyContainer} // emptyImage
-            resizeMode="contain"
-          />
-          <Text style={styles.emptyText}>이용 내역이 없습니다.</Text>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Icon name="arrow-back" size={24} color="#000" />
+          </Pressable>
+          <Text style={styles.headerTitle}>이용 내역</Text>
         </View>
-      ) : (
-        <FlatList
-          data={usageHistory}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.historyItem}>
-              <Text>{item}</Text>
+
+        {usageHistory.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              {/* 이미지 추가 */}
+              <Image
+                  source={require('../../asset/user-history.png')}
+                  style={styles.emptyContainer} // emptyImage
+                  resizeMode="contain"
+              />
+              <Text style={styles.emptyText}>이용 내역이 없습니다.</Text>
             </View>
-          )}
-        />
-      )}
-    </SafeAreaView>
+        ) : (
+            <FlatList
+                data={usageHistory}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item }) => (
+                    <View style={styles.historyItem}>
+                      <Text>{item}</Text>
+                    </View>
+                )}
+            />
+        )}
+      </SafeAreaView>
   );
 };
 

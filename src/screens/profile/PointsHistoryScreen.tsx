@@ -30,33 +30,33 @@ function PointsHistoryScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>포인트 내역</Text>
-      <View style={styles.contentContainer}>
-        {/* 기존 포인트 내역 관련 UI */}
-        <Text style={styles.contentText}>여기에 포인트 내역이 표시됩니다.</Text>
-      </View>
+      <SafeAreaView style={styles.container}>
+        <Text style={styles.title}>포인트 내역</Text>
+        <View style={styles.contentContainer}>
+          {/* 기존 포인트 내역 관련 UI */}
+          <Text style={styles.contentText}>여기에 포인트 내역이 표시됩니다.</Text>
+        </View>
 
-      {/* 리뷰 모달 버튼 */}
-      <Pressable style={styles.button} onPress={openReviewModal}>
-        <Text style={styles.buttonText}>리뷰 작성하기</Text>
-      </Pressable>
+        {/* 리뷰 모달 버튼 */}
+        <Pressable style={styles.button} onPress={openReviewModal}>
+          <Text style={styles.buttonText}>리뷰 작성하기</Text>
+        </Pressable>
 
-      {/* 포인트 모달 버튼 */}
-      <Pressable style={[styles.button, styles.pointButton]} onPress={openPointModal}>
-        <Text style={styles.buttonText}>포인트 받기 모달 보기</Text>
-      </Pressable>
+        {/* 포인트 모달 버튼 */}
+        <Pressable style={[styles.button, styles.pointButton]} onPress={openPointModal}>
+          <Text style={styles.buttonText}>포인트 받기 모달 보기</Text>
+        </Pressable>
 
-      {/* 리뷰 모달 */}
-      <ReviewModal visible={isReviewModalVisible} onClose={closeReviewModal} />
+        {/*/!* 리뷰 모달 *!/*/}
+        {/*<ReviewModal visible={isReviewModalVisible} onClose={closeReviewModal}  matchId={}/>*/}
 
-      {/* 포인트 수령 모달 */}
-      <PointReceivedModal
-        visible={isPointModalVisible}
-        onClose={closePointModal}
-        points={100} // 예시 포인트 값
-      />
-    </SafeAreaView>
+        {/* 포인트 수령 모달 */}
+        <PointReceivedModal
+            visible={isPointModalVisible}
+            onClose={closePointModal}
+            points={100} // 예시 포인트 값
+        />
+      </SafeAreaView>
   );
 }
 

@@ -1,224 +1,196 @@
-import React from "react";
-import { SafeAreaView, StyleSheet, Text, View, FlatList, Pressable, ScrollView } from "react-native";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
-import { useNavigation } from "@react-navigation/native";
+import React, { useEffect, useState } from "react";
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Animated } from "react-native";
+import { getDriverReviews } from "../../api/auth"; // 실제 API 함수로 대체
 
-function FeedHomeScreen() {
-  const navigation = useNavigation();
-  const reviewData = [
-    { label: '최고', count: 30 },
-    { label: '좋음', count: 1000 },
-    { label: '보통', count: 10 },
-    { label: '별로', count: 4 },
-    { label: '나쁨', count: 6 },
-  ];
+interface Review {
+  reviewer: string;
+  rating: number;
+  createdAt: string;
+}
 
-  const userReviews = [
-    { userId: 'user123', rating: 5, comment: '정말 좋았습니다!' },
-    { userId: 'user456', rating: 4, comment: '괜찮아요.' },
-    { userId: 'user789', rating: 3, comment: '보통입니다.' },
-    { userId: 'user101', rating: 2, comment: '별로였습니다.' },
-    { userId: 'user102', rating: 1, comment: '다시는 이용하지 않을 거예요.' },
-  ];
+const FeedHomeScreen = () => {
+  const [reviews, setReviews] = useState<Review[]>([]); // 리뷰를 빈 배열로 초기화
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const totalReviews = reviewData.reduce((total, item) => total + item.count, 0);
-  const averageRating = (reviewData.reduce((sum, item, index) => sum + (5 - index) * item.count, 0) / totalReviews).toFixed(1);
+  const fadeAnim = useState(new Animated.Value(0))[0];
 
-  const renderReviewItem = ({ item }: any) => {
-    const percentage = ((item.count / totalReviews) * 100).toFixed(1);
-    return (
-      <View style={styles.reviewRow}>
-        <Text style={styles.reviewLabel}>{item.label}</Text>
-        <View style={styles.reviewBarBackground}>
-          <View style={[styles.reviewBar, { width: `${percentage}%` }]} />
-        </View>
-        <Text style={styles.reviewPercentage}>{percentage}%</Text>
-      </View>
-    );
+  // 컴포넌트가 마운트될 때 리뷰 데이터를 가져오기
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const response = await getDriverReviews(1); // 실제 운전자의 ID로 대체
+        const sortedReviews = response.reviews.sort((a: Review, b: Review) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        ); // 날짜 기준으로 내림차순 정렬
+        setReviews(sortedReviews); // 응답에서 리뷰 가져오기
+      } catch (err) {
+        console.error("리뷰 가져오기 오류:", err);
+        setError("리뷰를 가져오는 데 실패했습니다.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReviews();
+
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  // 평균 별점 계산
+  const calculateAverageRating = () => {
+    const totalRating = reviews.reduce((acc, review) => acc + review.rating, 0);
+    return totalRating / reviews.length || 0;
   };
 
-  const renderUserReviewItem = ({ item }: any) => {
-    return (
-      <View style={styles.userReviewRow}>
-        <Text style={styles.userId}>{item.userId}</Text>
-        <View style={styles.userRating}>
-          {[...Array(item.rating)].map((_, index) => (
-            <MaterialIcons key={index} name="star" size={16} color="#FFD700" />
-          ))}
-          {[...Array(5 - item.rating)].map((_, index) => (
-            <MaterialIcons key={`empty-${index}`} name="star-border" size={16} color="#FFD700" />
-          ))}
-        </View>
-        <Text style={styles.userComment}>{item.comment}</Text>
-      </View>
-    );
-  };
-
-  const renderStars = () => {
-    const fullStars = Math.floor(Number(averageRating));
-    const halfStar = Number(averageRating) % 1 >= 0.5;
-    const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
-
-    return (
-      <View style={styles.starContainer}>
-        {[...Array(fullStars)].map((_, index) => (
-          <MaterialIcons key={`full-${index}`} name="star" size={24} color="#FFD700" />
-        ))}
-        {halfStar && <MaterialIcons name="star-half" size={24} color="#FFD700" />}
-        {[...Array(emptyStars)].map((_, index) => (
-          <MaterialIcons key={`empty-${index}`} name="star-border" size={24} color="#FFD700" />
-        ))}
-      </View>
-    );
+  // 별점 아이콘 생성
+  const renderRatingStars = (rating: number) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+          <Text key={i} style={i <= rating ? styles.filledStar : styles.emptyStar}>
+            ★
+          </Text>
+      );
+    }
+    return stars;
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.header}>
-          <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
-            <MaterialIcons name="arrow-back" size={24} color="#000" />
-          </Pressable>
-          <Text style={styles.headerTitle}>리뷰</Text>
-        </View>
-        <View style={styles.reviewContainer}>
-          <Text style={styles.reviewTitle}>사용자 리뷰</Text>
-          <View style={styles.ratingRow}>
-            <Text style={styles.ratingValue}>{averageRating}</Text>
-            {renderStars()}
-            <Text style={styles.reviewCount}>리뷰 {totalReviews}개</Text>
-          </View>
-          <FlatList
-            data={reviewData}
-            renderItem={renderReviewItem}
-            keyExtractor={(item) => item.label}
-            style={styles.reviewList}
-          />
-          <FlatList
-            data={userReviews}
-            renderItem={renderUserReviewItem}
-            keyExtractor={(item) => item.userId}
-            style={styles.userReviewList}
-          />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+      <View style={styles.container}>
+        <Text style={styles.title}>운전자의 리뷰</Text>
+
+        {loading ? (
+            <Text style={styles.loading}>리뷰를 불러오는 중...</Text>
+        ) : error ? (
+            <Text style={styles.error}>{error}</Text>
+        ) : (
+            <>
+              <View style={styles.ratingContainer}>
+                <Text style={styles.averageRating}>
+                  평균 별점: {calculateAverageRating().toFixed(1)}⭐
+                </Text>
+              </View>
+
+              <ScrollView contentContainerStyle={styles.scrollView}>
+                <Animated.View style={{ opacity: fadeAnim }}>
+                  {reviews.length > 0 ? (
+                      reviews.map((review, index) => (
+                          <View key={index} style={styles.card}>
+                            <Text style={styles.reviewer}>{review.reviewer}</Text>
+                            <View style={styles.rating}>{renderRatingStars(review.rating)}</View>
+                            <Text style={styles.date}>
+                              리뷰 작성일: {new Date(review.createdAt).toLocaleDateString()}
+                            </Text>
+                          </View>
+                      ))
+                  ) : (
+                      <Text style={styles.noReviews}>리뷰가 없습니다.</Text>
+                  )}
+                </Animated.View>
+              </ScrollView>
+            </>
+        )}
+      </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    padding: 20,
+    backgroundColor: "#f0f8ff",
   },
-  scrollContainer: {
-    padding: 16,
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#4b0082",
+    marginBottom: 20,
+    textAlign: "center",
+    textShadowColor: "#fff",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  backButton: {
-    position: 'absolute',
-    left: 20,
-  },
-  headerTitle: {
+  loading: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000',
+    color: "#999",
+    textAlign: "center",
+    marginTop: 50,
   },
-  reviewContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+  error: {
+    fontSize: 18,
+    color: "red",
+    textAlign: "center",
+    marginTop: 50,
+  },
+  ratingContainer: {
+    marginBottom: 20,
+    backgroundColor: "#ffeb3b",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    shadowColor: '#000',
     shadowOpacity: 0.2,
-    shadowRadius: 4,
+    shadowRadius: 8,
     elevation: 5,
   },
-  reviewTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 16,
-  },
-  ratingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  ratingValue: {
-    fontSize: 32,
-    fontWeight: "bold",
-    marginRight: 8,
-  },
-  starContainer: {
-    flexDirection: "row",
-  },
-  reviewCount: {
-    marginLeft: 8,
-    fontSize: 14,
-    color: "#888",
-  },
-  reviewList: {
-    marginTop: 16,
-  },
-  reviewRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  reviewLabel: {
-    flex: 1,
-    fontSize: 14,
-  },
-  reviewBarBackground: {
-    flex: 3,
-    height: 10,
-    backgroundColor: "#E0E0E0",
-    borderRadius: 5,
-    marginHorizontal: 8,
-  },
-  reviewBar: {
-    height: 10,
-    backgroundColor: "#3b82f6",
-    borderRadius: 5,
-  },
-  reviewPercentage: {
-    fontSize: 14,
-    color: "#888",
-  },
-  userReviewList: {
-    marginTop: 16,
-  },
-  userReviewRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  userId: {
-    flex: 1,
-    fontSize: 14,
+  averageRating: {
+    fontSize: 28,
     fontWeight: "bold",
     color: "#333",
+    textShadowColor: "#f3a2d2",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 5,
   },
-  userRating: {
+  scrollView: {
+    flexGrow: 1,
+  },
+  card: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+    marginHorizontal: 10,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  reviewer: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 12,
+  },
+  rating: {
     flexDirection: "row",
-    marginRight: 8,
+    marginBottom: 12,
   },
-  userComment: {
-    flex: 3,
-    fontSize: 14,
-    color: "#555",
+  filledStar: {
+    color: "#ff9800",
+    fontSize: 24,
+  },
+  emptyStar: {
+    color: "#e0e0e0",
+    fontSize: 24,
+  },
+  date: {
+    fontSize: 16,
+    color: "#888",
+    fontStyle: "italic",
+  },
+  noReviews: {
+    fontSize: 18,
+    color: "#888",
+    textAlign: "center",
+    marginTop: 50,
   },
 });
 

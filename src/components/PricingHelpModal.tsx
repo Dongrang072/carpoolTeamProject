@@ -11,7 +11,7 @@ import {
 import { colors } from '../constants';
 
 // 가격 데이터 정의
-const pricingData = [
+export const pricingData = [
   { departure: '명지대 자연캠퍼스', destination: '명지대역', distance: 1.6, price: [4800, 4320, 4080, 3840, 3360, 2880] },
   { departure: '명지대역', destination: '명지대 자연캠퍼스', distance: 1.6, price: [4800, 4320, 4080, 3840, 3360, 2880] },
 
@@ -44,68 +44,73 @@ const pricingData = [
 ];
 
 const PricingHelpModal: React.FC<{ visible: boolean; onClose: () => void; startPoint: string | null; endPoint: string | null }> = ({ visible, onClose, startPoint, endPoint }) => {
-  const [filteredData, setFilteredData] = useState<typeof pricingData | null>(null);
+  const [filteredData, setFilteredData] = useState<{
+    departure: string;
+    destination: string;
+    distance: number;
+    price: number[];
+  } | null>(null);
 
   useEffect(() => {
     if (startPoint && endPoint) {
       const matchedData = pricingData.find(
-        (item) =>
-          item.departure.trim().toLowerCase() === startPoint.trim().toLowerCase() &&
-          item.destination.trim().toLowerCase() === endPoint.trim().toLowerCase()
+          (item) =>
+              item.departure.trim().toLowerCase() === startPoint.trim().toLowerCase() &&
+              item.destination.trim().toLowerCase() === endPoint.trim().toLowerCase()
       );
-      setFilteredData(matchedData ? matchedData : null);
+      setFilteredData(matchedData || null);
     } else {
       setFilteredData(null);
     }
   }, [startPoint, endPoint]);
 
   return (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={visible}
-      onRequestClose={onClose}
-    >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>거리별 인원수별 가격 안내</Text>
+      <Modal
+          animationType="slide"
+          transparent={true}
+          visible={visible}
+          onRequestClose={onClose}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>거리별 인원수별 가격 안내</Text>
 
-          {filteredData ? (
-            <>
-              <View style={styles.tableHeader}>
-                <Text style={styles.tableCell}>출발지</Text>
-                <Text style={styles.tableCell}>목적지</Text>
-                <Text style={styles.tableCell}>거리(km)</Text>
-                <Text style={styles.tableCell}>1인</Text>
-                <Text style={styles.tableCell}>2인</Text>
-                <Text style={styles.tableCell}>3인</Text>
-                <Text style={styles.tableCell}>4인</Text>
-                <Text style={styles.tableCell}>5인</Text>
-                <Text style={styles.tableCell}>6인</Text>
-              </View>
-              <View style={styles.tableRow}>
-                <Text style={styles.tableCell}>{filteredData.departure}</Text>
-                <Text style={styles.tableCell}>{filteredData.destination}</Text>
-                <Text style={styles.tableCell}>{filteredData.distance} km</Text>
-                {filteredData.price.map((price, index) => (
-                  <Text key={index} style={styles.tableCell}>{price} ₩</Text>
-                ))}
-              </View>
-            </>
-          ) : (
-            <Text>해당 경로의 가격 정보가 없습니다.</Text>
-          )}
+            {filteredData ? (
+                <>
+                  <View style={styles.tableHeader}>
+                    <Text style={styles.tableCell}>출발지</Text>
+                    <Text style={styles.tableCell}>목적지</Text>
+                    <Text style={styles.tableCell}>거리(km)</Text>
+                    <Text style={styles.tableCell}>1인</Text>
+                    <Text style={styles.tableCell}>2인</Text>
+                    <Text style={styles.tableCell}>3인</Text>
+                    <Text style={styles.tableCell}>4인</Text>
+                    <Text style={styles.tableCell}>5인</Text>
+                    <Text style={styles.tableCell}>6인</Text>
+                  </View>
+                  <View style={styles.tableRow}>
+                    <Text style={styles.tableCell}>{filteredData.departure}</Text>
+                    <Text style={styles.tableCell}>{filteredData.destination}</Text>
+                    <Text style={styles.tableCell}>{filteredData.distance} km</Text>
+                    {filteredData.price.map((price, index) => (
+                        <Text key={index} style={styles.tableCell}>{price} ₩</Text>
+                    ))}
+                  </View>
+                </>
+            ) : (
+                <Text>해당 경로의 가격 정보가 없습니다.</Text>
+            )}
 
-          {/* 닫기 버튼 */}
-          <Pressable
-            style={styles.closeButton}
-            onPress={onClose}
-          >
-            <Text style={styles.closeButtonText}>닫기</Text>
-          </Pressable>
+            {/* 닫기 버튼 */}
+            <Pressable
+                style={styles.closeButton}
+                onPress={onClose}
+            >
+              <Text style={styles.closeButtonText}>닫기</Text>
+            </Pressable>
+          </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
   );
 };
 
