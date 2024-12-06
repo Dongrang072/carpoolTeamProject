@@ -1,29 +1,28 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Animated } from "react-native";
-import { getDriverReviews } from "../../api/auth"; // 실제 API 함수로 대체
+import { View, Text, ScrollView, StyleSheet, Animated } from "react-native";
+import { getAllReviews } from "../../api/reviews"; // API 함수 수정 필요
 
 interface Review {
   reviewer: string;
+  target: string;
   rating: number;
   createdAt: string;
 }
 
 const FeedHomeScreen = () => {
-  const [reviews, setReviews] = useState<Review[]>([]); // 리뷰를 빈 배열로 초기화
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-
   const fadeAnim = useState(new Animated.Value(0))[0];
 
-  // 컴포넌트가 마운트될 때 리뷰 데이터를 가져오기
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const response = await getDriverReviews(1); // 실제 운전자의 ID로 대체
-        const sortedReviews = response.reviews.sort((a: Review, b: Review) =>
+        const response = await getAllReviews();
+        const sortedReviews = response.reviews.sort((a, b) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        ); // 날짜 기준으로 내림차순 정렬
-        setReviews(sortedReviews); // 응답에서 리뷰 가져오기
+        );
+        setReviews(sortedReviews);
       } catch (err) {
         console.error("리뷰 가져오기 오류:", err);
         setError("리뷰를 가져오는 데 실패했습니다.");
@@ -41,13 +40,6 @@ const FeedHomeScreen = () => {
     }).start();
   }, []);
 
-  // 평균 별점 계산
-  const calculateAverageRating = () => {
-    const totalRating = reviews.reduce((acc, review) => acc + review.rating, 0);
-    return totalRating / reviews.length || 0;
-  };
-
-  // 별점 아이콘 생성
   const renderRatingStars = (rating: number) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -60,9 +52,26 @@ const FeedHomeScreen = () => {
     return stars;
   };
 
+  const calculateAverageRating = () => {
+    if (reviews.length === 0) return 0;
+    const totalRating = reviews.reduce((acc, review) => acc + review.rating, 0);
+    return totalRating / reviews.length;
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   return (
       <View style={styles.container}>
-        <Text style={styles.title}>운전자의 리뷰</Text>
+        <Text style={styles.title}>전체 리뷰</Text>
 
         {loading ? (
             <Text style={styles.loading}>리뷰를 불러오는 중...</Text>
@@ -74,6 +83,9 @@ const FeedHomeScreen = () => {
                 <Text style={styles.averageRating}>
                   평균 별점: {calculateAverageRating().toFixed(1)}⭐
                 </Text>
+                <Text style={styles.totalReviews}>
+                  전체 리뷰 수: {reviews.length}개
+                </Text>
               </View>
 
               <ScrollView contentContainerStyle={styles.scrollView}>
@@ -81,15 +93,20 @@ const FeedHomeScreen = () => {
                   {reviews.length > 0 ? (
                       reviews.map((review, index) => (
                           <View key={index} style={styles.card}>
-                            <Text style={styles.reviewer}>{review.reviewer}</Text>
-                            <View style={styles.rating}>{renderRatingStars(review.rating)}</View>
+                            <View style={styles.userInfo}>
+                              <Text style={styles.reviewer}>작성자: {review.reviewer}</Text>
+                              <Text style={styles.target}>드라이버: {review.target}</Text>
+                            </View>
+                            <View style={styles.rating}>
+                              {renderRatingStars(review.rating)}
+                            </View>
                             <Text style={styles.date}>
-                              리뷰 작성일: {new Date(review.createdAt).toLocaleDateString()}
+                              {formatDate(review.createdAt)}
                             </Text>
                           </View>
                       ))
                   ) : (
-                      <Text style={styles.noReviews}>리뷰가 없습니다.</Text>
+                      <Text style={styles.noReviews}>아직 작성된 리뷰가 없습니다.</Text>
                   )}
                 </Animated.View>
               </ScrollView>
@@ -102,95 +119,100 @@ const FeedHomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: "#f0f8ff",
+    padding: 16,
+    backgroundColor: "#f5f5f5",
   },
   title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#4b0082",
-    marginBottom: 20,
-    textAlign: "center",
-    textShadowColor: "#fff",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
-  },
-  loading: {
-    fontSize: 18,
-    color: "#999",
-    textAlign: "center",
-    marginTop: 50,
-  },
-  error: {
-    fontSize: 18,
-    color: "red",
-    textAlign: "center",
-    marginTop: 50,
-  },
-  ratingContainer: {
-    marginBottom: 20,
-    backgroundColor: "#ffeb3b",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  averageRating: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "bold",
     color: "#333",
-    textShadowColor: "#f3a2d2",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 5,
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  loading: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginTop: 40,
+  },
+  error: {
+    fontSize: 16,
+    color: "#dc3545",
+    textAlign: "center",
+    marginTop: 40,
+  },
+  ratingContainer: {
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  averageRating: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+    textAlign: "center",
+  },
+  totalReviews: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginTop: 8,
   },
   scrollView: {
     flexGrow: 1,
   },
   card: {
     backgroundColor: "#fff",
-    padding: 20,
+    padding: 16,
     borderRadius: 12,
-    marginBottom: 20,
+    marginBottom: 12,
+    elevation: 2,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-    marginHorizontal: 10,
-    borderWidth: 1,
-    borderColor: "#ddd",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  userInfo: {
+    marginBottom: 8,
   },
   reviewer: {
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: 16,
+    fontWeight: "500",
     color: "#333",
-    marginBottom: 12,
+    marginBottom: 4,
+  },
+  target: {
+    fontSize: 16,
+    color: "#666",
   },
   rating: {
     flexDirection: "row",
-    marginBottom: 12,
+    marginVertical: 8,
   },
   filledStar: {
-    color: "#ff9800",
-    fontSize: 24,
+    color: "#ffc107",
+    fontSize: 20,
   },
   emptyStar: {
     color: "#e0e0e0",
-    fontSize: 24,
+    fontSize: 20,
   },
   date: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#888",
-    fontStyle: "italic",
+    marginTop: 4,
   },
   noReviews: {
-    fontSize: 18,
-    color: "#888",
+    fontSize: 16,
+    color: "#666",
     textAlign: "center",
-    marginTop: 50,
+    marginTop: 40,
   },
 });
 
